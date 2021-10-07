@@ -34,6 +34,37 @@
                 <input type="submit" value="Upload" id="main_btn" class="not-visible btn btn-success">
             </form>
         </div>
+
+        <table class="table table-striped">
+            <thead>
+              <tr>
+                <th scope="col">File Name</th>
+                <th scope="col">File Type</th>
+                <th scope="col">Icon</th>
+                <th scope="col"></th>
+              </tr>
+            </thead>
+            <tbody>
+            {% if files %}
+              {% for file in files %}
+              <tr id="{{file.id}}">
+                <th scope="row">{{file.file.name|truncatechars:30}} <span><a href="{{file.file.url}}" target="_blank">view</a></span></th>
+                <td>{{file.file_ext|upper}}</td>
+                {% if file.file_ext == "pdf" %}
+                <td><i class="fa fa-file-pdf-o" aria-hidden="true"></i></td>
+                {% elif file.file_ext == "xls" %}
+                <td><i class="fa fa-file-excel-o" aria-hidden="true"></i></td>
+                {% else %}
+                <td>No Icon</td>
+                {% endif %}
+                <td><button class="btn btn-danger" id="delete_btn" onclick="deleteFile('{{file.id}}')">Delete</button></td>
+              </tr>
+              {% endfor %}
+            {% else %}
+            <p>No Files to show</p>
+            {% endif %}
+            </tbody>
+          </table>
     </div>
 
     <script>
@@ -43,6 +74,7 @@
         const main_uploadBtn = document.getElementById('main_btn');
         const csrf = document.getElementsByName('csrfmiddlewaretoken');
         const progress = document.getElementById('progress--bar');
+        const delete_btn = document.getElementById('delete_btn');
 
         fake_btn.addEventListener('click', function(){
             main_input_file.click();
@@ -91,7 +123,6 @@
                     main_uploadBtn.classList.add('not-visible');
                     file_nameCustom.innerHTML = '';
                     progress.innerHTML = '';
-
                 },
                 error: function(err){
                     console.log(err);
@@ -100,6 +131,31 @@
                 contentType: false,
                 processData: false,
             });
-        })
+        });
+
+        function deleteFile(id){
+            const row = document.getElementById(`${id}`);
+            let confirmAction = confirm("Are you sure you want to delete this?")
+
+            if(confirmAction){
+                $.ajax({
+                type: 'GET',
+                url: '{% url "delete" %}',
+                data:{
+                    'file_id':id
+                },
+                
+                dataType: 'json',
+                success: function(response){
+                    row.classList.add('not-visible');
+                },
+                error: function(err){
+                    console.log(err);
+                }
+            });
+            }else{
+                console.log("Canceled");
+            }
+        }
     </script>
 {% endblock %}

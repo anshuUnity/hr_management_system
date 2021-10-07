@@ -19,13 +19,15 @@ from django.urls import path
 from hr_management import settings
 from django.conf.urls.static import static
 
-from accounts.views import index, loginView, UploadView
+from accounts.views import index, loginView, UploadView, deleteFile, logout_view
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', index, name='home'),
     path('login/', loginView, name='login'),
     path('upload/', UploadView.as_view(), name='upload'),
+    path('logout/', logout_view, name='logout'),
+    path('delete/', deleteFile, name='delete'),
 ]
 
 if settings.DEBUG:
@@ -33,3 +35,4 @@ if settings.DEBUG:
                           document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL,
                           document_root=settings.STATIC_ROOT)
+
