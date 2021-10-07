@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block title %}Upload File{% endblock %}
+{% block content %}
+<style>
+    form{
+        margin-top: 2rem;
+    }
+
+    .styled_upload--btn{
+        margin-top: 2rem;
+    }
+
+    .not-visible{
+        display: none;
+    }
+
+    #id_file{
+        display: none;
+    }
+</style>
+    <div class="container">
+        <div class="form_containers">
+            <div class="styled_upload--btn">
+                <button class="btn btn-primary" id="fake_btn">Select File <i class="fa fa-plus" aria-hidden="true"></i></button>
+                <p id="file_name--custom"></p>
+            </div>
+            <div class="progress-bar" id="progress--bar">
+
+            </div>
+            <form action="" method="post" enctype="multipart/form-data" id="upload_form">
+                {% csrf_token %}
+                {{form}}
+                <input type="submit" value="Upload" id="main_btn" class="not-visible btn btn-success">
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const fake_btn = document.getElementById('fake_btn');
+        const main_input_file = document.getElementById('id_file');
+        const file_nameCustom = document.getElementById('file_name--custom')
+        const main_uploadBtn = document.getElementById('main_btn');
+        const csrf = document.getElementsByName('csrfmiddlewaretoken');
+        const progress = document.getElementById('progress--bar');
+
+        fake_btn.addEventListener('click', function(){
+            main_input_file.click();
+        })
+
+        main_input_file.addEventListener('change', function(){
+            if(main_input_file.value){
+                file_nameCustom.innerHTML = main_input_file.value.match(/[\/\\]([\w\d\s\.\-\(\)]+)$/)[1];
+                main_uploadBtn.classList.remove('not-visible');
+            }else{
+                console.log('NO FILE');
+                main_uploadBtn.classList.add('not-visible');
+            }
+        })
+
+        $('#upload_form').submit(function (e){
+            e.preventDefault();
+            $form = $(this);
+            var formData = new FormData(this);
+            const media = main_input_file.files[0];
+            if(media != null){
+                console.log("HELLO");
+            }
+
+            $.ajax({
+                type: 'POST',
+                url: '{% url "upload" %}',
+                data: formData,
+                dataType: 'json',
+                beforeSend: function(){
+
+                },
+                xhr: function(){
+                    const xhr = new window.XMLHttpRequest();
+                    xhr.upload.addEventListener("progress", e=>{
+                        if(e.lengthComputable){
+                            const percentProgress = (e.loaded/e.total)*100;
+                            progress.innerHTML = `<div class="progress">
+                                                        <div class="progress-bar progress-bar-striped bg-success" role="progressbar" style="width: ${percentProgress}%" aria-valuenow="${percentProgress}" aria-valuemin="0" aria-valuemax="100"></div>
+                                                    </div>`;
+                        }
+                    });
+                    return xhr;
+                },
+                success: function(response){
+                    main_uploadBtn.classList.add('not-visible');
+                    file_nameCustom.innerHTML = '';
+                    progress.innerHTML = '';
+
+                },
+                error: function(err){
+                    console.log(err);
+                },
+                cache: false,
+                contentType: false,
+                processData: false,
+            });
+        })
+    </script>
+{% endblock %}
